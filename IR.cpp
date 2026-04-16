@@ -7,7 +7,7 @@ int ir_code = 0x00;
 int ir_addr = 0x00;
 int data;
 
-int logic_value(){//判断逻辑值"0"和"1"子函数
+int logic_value(){//論理値「0」と「1」を判断するサブ関数
     uint32_t lasttime = system_timer_current_time_us();
     uint32_t nowtime;
     while(!uBit.io.P9.getDigitalValue());//低等待
@@ -27,7 +27,7 @@ int logic_value(){//判断逻辑值"0"和"1"子函数
 
 void pulse_deal(){
     int i;
-    ir_addr=0x00;//清零
+    ir_addr=0x00;//ゼロにリセット
     for(i=0; i<16;i++ )
     {
       if(logic_value() == 1)
@@ -35,8 +35,8 @@ void pulse_deal(){
         ir_addr |=(1<<i);
       }
     }
-    //解析遥控器编码中的command指令
-    ir_code=0x00;//清零
+    //リモコンコード内のcommand命令を解析
+    ir_code=0x00;//ゼロにリセット
     for(i=0; i<16;i++ )
     {
       if(logic_value() == 1)
@@ -51,27 +51,27 @@ void remote_decode(void){
     data = 0x00;
     uint32_t lasttime = system_timer_current_time_us();
     uint32_t nowtime;
-    while(uBit.io.P9.getDigitalValue()){//高电平等待
+    while(uBit.io.P9.getDigitalValue()){//ハイレベル待機
         nowtime = system_timer_current_time_us();
-        if((nowtime - lasttime) > 100000){//超过100 ms,表明此时没有按键按下
+        if((nowtime - lasttime) > 100000){//100msを超え、その時点でキーが押されていないことを示す
             ir_code = 0xff00;
             return;
         }
     }
-    //如果高电平持续时间不超过100ms
+    //ハイレベルの継続時間が100msを超えない場合
     lasttime = system_timer_current_time_us();
-    while(!uBit.io.P9.getDigitalValue());//低等待
+    while(!uBit.io.P9.getDigitalValue());//ロー待機
     nowtime = system_timer_current_time_us();
     if((nowtime - lasttime) < 10000 && (nowtime - lasttime) > 8000){//9ms
-        while(uBit.io.P9.getDigitalValue());//高等待
+        while(uBit.io.P9.getDigitalValue());//ハイレベル待機
         lasttime = system_timer_current_time_us();
-        if((lasttime - nowtime) > 4000 && (lasttime - nowtime) < 5000){//4.5ms,接收到了红外协议头且是新发送的数据。开始解析逻辑0和1
+        if((lasttime - nowtime) > 4000 && (lasttime - nowtime) < 5000){//4.5ms。赤外線プロトコルヘッダを受信し、新しく送信されたデータです。論理値0と1の解析を開始します
             pulse_deal();
             //uBit.serial.printf("addr=0x%X,code = 0x%X\r\n",ir_addr,ir_code);
             data = ir_code;
             return;//ir_code;
-        }else if((lasttime - nowtime) > 2000 && (lasttime - nowtime) < 2500){//2.25ms,表示发的跟上一个包一致
-            while(!uBit.io.P9.getDigitalValue());//低等待
+        }else if((lasttime - nowtime) > 2000 && (lasttime - nowtime) < 2500){//2.25ms。前のパケットと同じデータが送信されたことを示します
+            while(!uBit.io.P9.getDigitalValue());//ロー待機
             nowtime = system_timer_current_time_us();
             if((nowtime - lasttime) > 500 && (nowtime - lasttime) < 700){//560us
                 //uBit.serial.printf("addr=0x%X,code = 0x%X\r\n",ir_addr,ir_code);
